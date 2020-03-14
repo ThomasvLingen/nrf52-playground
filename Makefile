@@ -1,51 +1,63 @@
 SILENT = @
 
 # Compiler
-CC = g++
-LD = $(CC)
-
-# Compiler flags
-INCLUDE_PATHS = -Isrc/
-COMPILER_FLAGS = -Wall -std=c++11 $(INCLUDE_PATHS)
-
-# Linker flags
-LIBS =
-LINKER_FLAGS =
-
-# Files to compile
-SRC_PATH = src/
-SRC_FILES = $(shell find $(SRC_PATH) -name '*.cpp')
-OBJ_FILES = $(SRC_FILES:.cpp=.o)
+CC = arm-none-eabi-gcc
+AS = arm-none-eabi-gcc
+LD = arm-none-eabi-gcc
+OBJCOPY = arm-none-eabi-objcopy
+SREC_CAT = srec_cat
 
 # Path for the resulting file
 BUILD_PATH = build/
-RES_PATH = res/
-PROGRAM_NAME = program
-EXEC = $(BUILD_PATH)$(PROGRAM_NAME)
+PROGRAM_NAME = nrf52-blinky
+
+# Compiler flags
+INCLUDE_PATHS = -Isrc/
+COMPILER_FLAGS = -Wall -Werror -O0 -g3 $(INCLUDE_PATHS)
+
+# Linker flags
+LIBS =
+LINKER_FLAGS = -T generic_gcc_nrf52.ld
+
+
+OUT_ELF = $(BUILD_PATH)$(PROGRAM_NAME).elf
+OUT_HEX = $(OUT_ELF:.elf=.hex)
+
+# Files to compile
+SRC_PATH = src/
+
+SRC_FILES += $(shell find $(SRC_PATH) -name '*.c')
+AS_FILES +=
+OBJ_FILES = $(SRC_FILES:.c=.o) $(AS_FILES:.S=.o)
+
+# Get nrf sdk dependant stuff
+include nrf_sdk.mk
+
 
 # Compile stuff
-%.o : %.cpp
+%.o : %.c
 	@echo CC $<
 	$(SILENT) $(CC) -c $< $(COMPILER_FLAGS) -o $@
 
-$(EXEC) : $(OBJ_FILES)
+%.o : %.S
+	@echo AS $<
+	$(SILENT) $(AS) -c $< $(COMPILER_FLAGS) -o $@
+
+all : $(OUT_ELF) $(OUT_HEX) $(OUT_COMBINED_HEX)
+
+$(OUT_ELF) : $(OBJ_FILES)
 	@echo
 	mkdir -p $(BUILD_PATH)
 	@echo LD $@
-	$(SILENT) $(LD) $(COMPILER_FLAGS) $(OBJ_FILES) $(LINKER_FLAGS) $(LIBS) -o $(EXEC)
-	@echo
-	@echo "Moving resources to build"
-	cp -r $(RES_PATH) $(BUILD_PATH)
-	@echo
+	$(SILENT) $(LD) $(OBJ_FILES) $(LINKER_FLAGS) $(LIBS) -o $(OUT_ELF)
 
-all : $(EXEC)
-
-run : $(EXEC)
-	$(EXEC)
+$(OUT_HEX) : $(OUT_ELF)
+	@echo HX $@
+	$(SILENT) $(OBJCOPY) -O ihex $(OUT_ELF) $(OUT_HEX)
 
 .PHONY: clean
 clean:
 	@echo "Cleaning build"
-	rm -rf $(shell find $(SRC_PATH) -name '*.o')
+	rm -rf $(OBJ_FILES)
 	rm -rf $(BUILD_PATH)*
 
