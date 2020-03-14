@@ -1,0 +1,4 @@
+build/*
+*.o
+
+lib/nRF5SDK160098a08e2
