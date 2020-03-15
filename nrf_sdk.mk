@@ -1,6 +1,7 @@
 NRF = lib/nRF5SDK160098a08e2
 NRF_LIB = $(NRF)/components/libraries
 NRF_X = $(NRF)/modules/nrfx
+NRF_EXTERNAL = $(NRF)/external
 
 BOILERPLATE_INCLUDE = \
 	-I $(NRF)/components/boards \
@@ -20,15 +21,20 @@ INCLUDE_PATHS += \
 	-I $(NRF)/integration/nrfx \
 	-I $(NRF_LIB)/delay \
 	-I $(NRF_LIB)/util \
+	-I $(NRF_EXTERNAL)/segger_rtt \
 
+SRC_PATH += \
+	$(NRF_EXTERNAL)/segger_rtt \
 
 SRC_FILES += \
 	$(BOILERPLATE_SRC_FILES) \
+	$(NRF_LIB)/util/app_util_platform.c \
 
 AS_FILES += \
 	$(NRF_X)/mdk/gcc_startup_nrf52840.S
 
 COMPILER_FLAGS += \
+	-DUSE_APP_CONFIG \
 	-DBOARD_PCA10056 \
 	-DBSP_DEFINES_ONLY \
 	-DCONFIG_GPIO_AS_PINRESET \
