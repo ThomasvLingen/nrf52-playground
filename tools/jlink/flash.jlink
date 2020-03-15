@@ -1,0 +1,7 @@
+device NRF52840_XXAA
+speed 4000
+si swd
+erase
+loadfile build/nrf52-blinky-combined.hex
+r
+q

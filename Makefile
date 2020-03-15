@@ -56,8 +56,12 @@ $(OUT_HEX) : $(OUT_ELF)
 	$(SILENT) $(OBJCOPY) -O ihex $(OUT_ELF) $(OUT_HEX)
 
 .PHONY: clean
+
 clean:
 	@echo "Cleaning build"
 	rm -rf $(OBJ_FILES)
 	rm -rf $(BUILD_PATH)*
 
+flash: $(OUT_COMBINED_HEX)
+	@echo "Flashing target"
+	JLinkExe -CommanderScript tools/jlink/flash.jlink
